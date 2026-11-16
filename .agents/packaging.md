@@ -5,7 +5,7 @@
 | What? | Where? | Built by |
 | --- | --- | --- |
 | Arch | `packaging/PKGBUILD` | `makepkg`, from the working tree as it is |
-| Debian 13 | `packaging/debian/` | `dpkg-buildpackage`, after copying the directory to the repository root |
+| Ubuntu 26.04 | `packaging/debian/` | `dpkg-buildpackage`, after copying the directory to the repository root |
 | Fedora 44 | `packaging/fedora/shineshift.spec` | `rpmbuild`, from a `git archive` of `HEAD` named `shineshift.tar.gz` |
 | Alpine 3.24 | `packaging/alpine/APKBUILD` | `abuild`, from a `git archive` of `HEAD` |
 
@@ -15,14 +15,16 @@ CI copies it there rather than the recipe living there. `debian/changelog` is ge
 because it only carries the version. The spec and the APKBUILD only ever see committed files, while
 makepkg and dpkg-buildpackage build whatever is in the tree.
 
-Qt and libddcutil come from the distribution, so each package is built for one release, which is why
-there is one Debian and one Fedora package rather than one per format family.
+LayerShellQt 6.6 is the floor that decides which releases can build at all: it added `setScreen` and
+`setWantsToBeOnActiveScreen`, and it needs Qt 6.10 itself. Debian 13 stops at 6.3.4 and Qt 6.8, which is
+why the Debian-format package targets Ubuntu 26.04 LTS (6.6.4, Qt 6.10.2) instead.
 
-libddcutil has to be 2.2.1 or newer for `ddca_get_display_info2`. Debian 13 ships 2.2.0, so the Debian
-jobs install `libddcutil-dev` from trixie-backports before anything else, and the package then needs
-`libddcutil5` from there too: `apt install -t trixie-backports ./shineshift_*.deb`. Fedora 44 carries
-3.0.2 and Alpine 3.24 2.2.7. `DDCA_Display_Info2` measured the same on all three, the size and offsets
-the test in `src/ddc.zig` pins (see `ddc.md`).
+Qt and libddcutil come from the distribution, so each package is built for one release, which is why
+there is one Ubuntu and one Fedora package rather than one per format family.
+
+libddcutil has to be 2.2.1 or newer for `ddca_get_display_info2`. Ubuntu 26.04 carries 2.2.5, Fedora 44
+3.0.2 and Alpine 3.24 2.2.7. `DDCA_Display_Info2` measured the same on all three, the size and offsets the
+test in `src/ddc.zig` pins (see `ddc.md`).
 
 Every package depends on the `ddcutil` package rather than only the library, because that package ships
 the udev rule that gives the logged-in user `/dev/i2c-*`, which the README relies on. Alpine splits the
@@ -48,8 +50,8 @@ match the tag.
 ## Zig
 
 Packages build with Zig 0.17.1, the floor `minimum_zig_version` in `build.zig.zon` sets. 0.18-dev builds
-too. Arch x86_64 ships 0.17.1, but Arch Linux ARM, Fedora 44 and Alpine 3.24 ship 0.16 and Debian 13 has no
-Zig at all. So every job gets it from `mlugg/setup-zig`, which reads that same `minimum_zig_version`. Only
+too. Arch x86_64 ships 0.17.1, but Arch Linux ARM, Fedora 44 and Alpine 3.24 ship 0.16 and Ubuntu 26.04
+stops at 0.15. So every job gets it from `mlugg/setup-zig`, which reads that same `minimum_zig_version`. Only
 the PKGBUILD lists `zig` as a dependency. The Arch job installs everything else from the PKGBUILD's own
 arrays and builds with `--nodeps`. setup-zig points both Zig cache variables at root's home, so the job
 hands that directory to its unprivileged builder.
@@ -69,7 +71,7 @@ It skips whatever cannot change a package. A push confined to `**.md` or `.agent
 whose tip message begins with `docs` or `build: release` stops at the `build` job, so a release is built
 once from its own tag instead of twice.
 
-`ci.yml` builds and runs the tests on every push and pull request, on Debian 13 for Qt 6.8, the oldest
+`ci.yml` builds and runs the tests on every push and pull request, on Ubuntu 26.04 for Qt 6.10, the oldest
 supported, and on Fedora 44 for the newest. It installs build dependencies straight from the recipes
 (`apt-get build-dep ./packaging` and `dnf builddep` on the spec), so those lists are only written once.
 
@@ -80,12 +82,14 @@ ARM still compresses packages with xz, so the job rewrites `PKGEXT` and both arc
 ruleset a container cannot set up.
 
 The Alpine job does not use a job container. Every action is Node, the runner's Node is linked against
-glibc, and a musl job container fails at `actions/checkout`. It checks out on the runner and builds inside
-`docker run alpine:3.24`. abuild signs with a key it generates on the spot, so the package installs with
-`apk add --allow-untrusted`. It also writes the architecture into a directory rather than the file name,
-so the job renames each package before uploading.
+glibc, and a musl job container fails at `actions/checkout`. It checks out on the runner and builds
+inside `docker run alpine:3.24`. `abuild -r` only reads apk's cached package index, so `alpine-sdk` is
+installed without `--no-cache`, which would leave nothing for it to read. abuild signs with a key it
+generates on the spot, so the package installs with `apk add --allow-untrusted`. It also writes the
+architecture into a directory rather than the file name, so the job renames each package before
+uploading.
 
-Uploads leave out debug packages: Arch's `-debug`, Debian's `-dbgsym` and Fedora's `-debuginfo` and
+Uploads leave out debug packages: Arch's `-debug`, Ubuntu's `-dbgsym` and Fedora's `-debuginfo` and
 `-debugsource`.
 
 ## Cutting a release

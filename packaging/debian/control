@@ -2,13 +2,12 @@ Source: shineshift
 Section: utils
 Priority: optional
 Maintainer: ELECTRO <electro@electris.net>
-# Zig 0.17 is not in the archive, so it is not listed and has to be on PATH.
-# libddcutil 2.2.1 or newer comes from trixie-backports.
+# Zig 0.17 is newer than the archive's, so it is not listed and has to be on PATH.
 Build-Depends:
  cmake,
  debhelper-compat (= 13),
  libddcutil-dev (>= 2.2.1),
- liblayershellqtinterface-dev,
+ liblayershellqtinterface-dev (>= 6.6),
  ninja-build,
  pkgconf,
  qt6-base-dev,

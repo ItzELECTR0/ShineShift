@@ -83,9 +83,8 @@ Custom themes are JSON files in `~/.config/ShineShift/themes/`. Anything you lea
 
 ## Install
 
-Grab a package for Arch, Debian 13, Fedora 44 or Alpine 3.24 (x86_64 or aarch64) from the [releases](https://github.com/ItzELECTR0/ShineShift/releases).
+Grab a package for Arch, Ubuntu 26.04, Fedora 44 or Alpine 3.24 (x86_64 or aarch64) from the [releases](https://github.com/ItzELECTR0/ShineShift/releases).
 The Alpine one is signed with a throwaway key, so it needs `apk add --allow-untrusted`.
-The Debian one needs libddcutil from trixie-backports, so install it with `sudo apt install -t trixie-backports ./shineshift_*.deb`.
 The `experimental` release at the top is built from the latest commit, so it's the newest and also the most likely to be broken.
 
 ## Prerequisites

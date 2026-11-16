@@ -57,8 +57,8 @@ jobs:
           path: packaging/shineshift-[0-9]*.pkg.tar.zst
           if-no-files-found: error
 
-  debian:
-    name: Debian 13 ${{ matrix.arch }}
+  ubuntu:
+    name: Ubuntu 26.04 ${{ matrix.arch }}
     strategy:
       fail-fast: false
       matrix:
@@ -68,7 +68,9 @@ jobs:
           - arch: aarch64
             runner: ubuntu-24.04-arm
     runs-on: ${{ matrix.runner }}
-    container: debian:13
+    container: ubuntu:26.04
+    env:
+      DEBIAN_FRONTEND: noninteractive
     steps:
       - name: Install build tools
         run: |
@@ -81,18 +83,13 @@ jobs:
         with:
           use-cache: false
       - name: Install dependencies
-        # Debian 13's own libddcutil predates ddca_get_display_info2, which arrived in 2.2.1.
-        run: |
-          echo 'deb http://deb.debian.org/debian trixie-backports main' > /etc/apt/sources.list.d/backports.list
-          apt-get update
-          apt-get install -y -t trixie-backports libddcutil-dev
-          apt-get build-dep -y ./packaging
+        run: apt-get build-dep -y ./packaging
       - name: Build package
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           cp -r packaging/debian debian
           cat > debian/changelog <<CHANGELOG
-          shineshift ($(packaging/version.sh)) trixie; urgency=medium
+          shineshift ($(packaging/version.sh)) resolute; urgency=medium
 
             * Built from ${GITHUB_SHA:0:7}.
 
@@ -103,7 +100,7 @@ jobs:
           mv ../shineshift_*.deb artifacts/
       - uses: actions/upload-artifact@v7
         with:
-          name: shineshift-debian-package-${{ matrix.arch }}
+          name: shineshift-ubuntu-package-${{ matrix.arch }}
           path: artifacts
           if-no-files-found: error
 
@@ -171,7 +168,7 @@ jobs:
           docker run --rm -v "$PWD:/work" -v "$(dirname "$(readlink -f "$(command -v zig)")"):/opt/zig:ro" alpine:3.24 sh -c '
             set -eu
             export PATH="/opt/zig:$PATH"
-            apk add --no-cache alpine-sdk
+            apk add alpine-sdk
             git config --global --add safe.directory /work
             abuild-keygen -na
             cp /root/.abuild/*.rsa.pub /etc/apk/keys/

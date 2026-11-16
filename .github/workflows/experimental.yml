@@ -51,7 +51,6 @@ jobs:
 
           The Alpine packages are signed with a throwaway key, so install them with \`apk add --allow-untrusted\`.
 
-          The Debian package needs libddcutil from trixie-backports, so install it with \`apt install -t trixie-backports ./shineshift_*.deb\`.
           NOTES
       - name: Replace the experimental release
         env:
