@@ -31,7 +31,7 @@ Only brightness is remembered and restored. Contrast, volume, input and power ar
 
 ## Power
 
-`Monitor::setPowered(false)` sends VCP 0xD6: standby (2) or off (4), falling back to 4 or 5 when the capabilities do not list the first choice. Many monitors stop answering DDC after an off signal and cannot be woken by one.
+`Monitor::setPowered(false)` sends VCP 0xD6 with the `powerSignal` setting: standby (2) or off (4). `shineshift power` names the mode itself. A comma list (`power DP-1 on,standby`, `set DP-1 0,50,100`) reads the monitor first through `Displays::afterRead`, because buttons and other tools change it behind the app's back. A queued write counts as the current value, so quick presses step on from each other. A power read that fails means the monitor is asleep and gets "on". A brightness within a third of the gap to a listed value counts as that value; anything else climbs to the next value above. `Monitor::powerMode` falls back to 4 or 5 when the capabilities do not list the first choice, and a monitor that lists no modes gets what was asked for. Many monitors stop answering DDC after an off signal and cannot be woken by one.
 
 ## Fake displays
 

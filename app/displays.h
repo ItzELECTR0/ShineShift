@@ -12,6 +12,7 @@
 #include <QTimer>
 #include <QVariantList>
 
+#include <functional>
 #include <memory>
 
 class Displays;
@@ -134,6 +135,8 @@ private:
     int raw(int feature) const { return m_values.value(feature).value; }
     int scaled(int feature) const;
     void setScaled(int feature, int percent);
+    int powerMode(int state) const;
+    void setPower(int state);
     int rawBrightnessFor(int percent) const;
     void load();
     void store(const QString &key, const QVariant &value);
@@ -240,6 +243,9 @@ private:
 
     void write(Monitor *monitor, int feature, int value);
     void read(Monitor *monitor, int feature);
+    void afterRead(Monitor *monitor, int feature, std::function<void(Monitor *, bool)> then);
+    void applyReading(int display, int feature, int value, int maximum);
+    Monitor *monitorAt(int display) const;
     void setBrightness(Monitor *monitor, int percent, bool spread);
     QList<Monitor *> visible() const;
     void reapply(Monitor *monitor);
@@ -271,6 +277,12 @@ private:
     bool m_ready = false;
     QString m_error;
     QList<QStringList> m_waiting;
+    struct Followup {
+        int display;
+        int feature;
+        std::function<void(Monitor *, bool)> then;
+    };
+    QList<Followup> m_followups;
     bool m_flyoutOpen = false;
     bool m_settingsOpen = false;
     bool m_layered = false;

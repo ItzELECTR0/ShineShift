@@ -40,6 +40,35 @@ bool parseInt(const QString &text, int &value) {
 
 bool isRelative(const QString &text) { return text.startsWith('+') || text.startsWith('-'); }
 
+// A level within a third of the gap to a listed value counts as that value and steps past it.
+// Anything else climbs to the next value above, or wraps to the first one.
+int stepLevel(const QList<int> &values, int current) {
+    qsizetype near = -1;
+    int nearest = 0;
+    for (qsizetype index = 0; index < values.size(); ++index) {
+        int gap = 100;
+        for (qsizetype other = 0; other < values.size(); ++other)
+            if (other != index) gap = std::min(gap, std::abs(values[index] - values[other]));
+        const int distance = std::abs(current - values[index]);
+        if (distance * 3 <= gap && (near < 0 || distance < nearest)) {
+            near = index;
+            nearest = distance;
+        }
+    }
+    if (near >= 0) return values.value(near + 1, values.first());
+    int above = -1;
+    for (int value : values)
+        if (value > current && (above < 0 || value < above)) above = value;
+    return above >= 0 ? above : values.first();
+}
+
+// A monitor that does not answer is taken to be asleep, so it gets woken.
+int stepPower(const QList<int> &states, int current, bool answered) {
+    if (!answered && states.contains(1)) return 1;
+    const qsizetype at = states.indexOf(answered ? current : -1);
+    return at < 0 ? states.first() : states.value(at + 1, states.first());
+}
+
 QString fail(const QString &message) { return QStringLiteral("error: ") + message; }
 }
 
@@ -216,12 +245,19 @@ void Monitor::setInput(int value) {
     emit valuesChanged();
 }
 
-void Monitor::setPowered(bool on) {
-    // MCCS power modes: 1 on, 2 standby, 4 off, 5 off like the power button.
-    const auto offered = [this](int state) { return m_powerStates.isEmpty() || m_powerStates.contains(state); };
-    const bool off = m_owner->m_settings->text("powerSignal") == "off";
+void Monitor::setPowered(bool on) { setPower(on ? 1 : m_owner->m_settings->text("powerSignal") == "off" ? 4 : 2); }
+
+// MCCS power modes: 1 on, 2 standby, 4 off, 5 off like the power button.
+int Monitor::powerMode(int state) const {
+    const auto offered = [this](int mode) { return m_powerStates.isEmpty() || m_powerStates.contains(mode); };
+    if (state == 2 && !offered(2)) return offered(4) ? 4 : 5;
+    if (state == 4 && !offered(4)) return 5;
+    return state;
+}
+
+void Monitor::setPower(int state) {
     Reading &reading = m_values[Vcp::Power];
-    reading.value = on ? 1 : off ? (offered(4) ? 4 : 5) : (offered(2) ? 2 : 4);
+    reading.value = powerMode(state);
     reading.known = true;
     m_owner->write(this, Vcp::Power, reading.value);
     emit valuesChanged();
@@ -348,6 +384,7 @@ void Displays::sortMonitors() {
 
 void Displays::onDetected(int generation, const QList<DisplayRecord> &displays) {
     m_generation = generation;
+    m_followups.clear();
     QList<Monitor *> next;
     for (int index = 0; index < displays.size(); ++index) {
         DisplayRecord record = displays.at(index);
@@ -412,11 +449,33 @@ void Displays::onWritten(int generation, int display, int feature, int value, bo
     }
 }
 
+void Displays::afterRead(Monitor *monitor, int feature, std::function<void(Monitor *, bool)> then) {
+    if (monitor->m_index < 0 || monitor->m_pending.contains(feature)) return then(monitor, true);
+    m_followups.append({monitor->m_index, feature, std::move(then)});
+    read(monitor, feature);
+}
+
+Monitor *Displays::monitorAt(int display) const {
+    for (Monitor *candidate : m_monitors)
+        if (candidate->m_index == display) return candidate;
+    return nullptr;
+}
+
 void Displays::onValueRead(int generation, int display, int feature, int value, int maximum, bool ok) {
-    if (generation != m_generation || !ok) return;
-    Monitor *monitor = nullptr;
-    for (Monitor *candidate : std::as_const(m_monitors))
-        if (candidate->m_index == display) monitor = candidate;
+    if (generation != m_generation) return;
+    if (ok) applyReading(display, feature, value, maximum);
+    QList<Followup> due;
+    m_followups.removeIf([&](const Followup &entry) {
+        if (entry.display != display || entry.feature != feature) return false;
+        due.append(entry);
+        return true;
+    });
+    for (const Followup &entry : std::as_const(due))
+        if (Monitor *monitor = monitorAt(display)) entry.then(monitor, ok);
+}
+
+void Displays::applyReading(int display, int feature, int value, int maximum) {
+    Monitor *monitor = monitorAt(display);
     // A write that is still queued makes this reading out of date already.
     if (!monitor || monitor->m_pending.contains(feature)) return;
 
@@ -823,7 +882,19 @@ QString Displays::run(const QStringList &arguments) {
     };
 
     for (Monitor *monitor : chosen) {
-        if (command == "set" || command == "offset") {
+        if (command == "set" && argument.contains(',')) {
+            QList<int> values;
+            for (const QString &part : argument.split(',')) {
+                int value = 0;
+                if (!parseInt(part.trimmed(), value)) return fail(tr("\"%1\" is not a number").arg(part));
+                values.append(std::clamp(value, 0, 100));
+            }
+            afterRead(monitor, Vcp::Brightness, [this, values, quiet, single = subject != nullptr](Monitor *current, bool) {
+                const int percent = stepLevel(values, current->brightness());
+                setBrightness(current, percent, false);
+                if (!quiet) flash(single ? current : nullptr, "brightness_high_regular", percent / 100.0, QStringLiteral("%1%").arg(percent));
+            });
+        } else if (command == "set" || command == "offset") {
             int amount = 0;
             if (!parseInt(argument, amount)) return fail(tr("\"%1\" is not a number").arg(argument));
             const bool relative = command == "offset" || isRelative(argument);
@@ -879,8 +950,19 @@ QString Displays::run(const QStringList &arguments) {
             if (value < 0 && !parseInt(argument, value)) return fail(tr("%1 has no input called \"%2\"").arg(monitor->name(), argument));
             monitor->setInput(value);
         } else if (command == "power") {
-            if (argument != "on" && argument != "off") return fail(tr("power takes on or off"));
-            monitor->setPowered(argument == "on");
+            static const QHash<QString, int> modes = {{"on", 1}, {"standby", 2}, {"off", 4}};
+            QList<int> states;
+            for (const QString &part : argument.split(',')) {
+                if (!modes.contains(part.trimmed())) return fail(tr("power takes on, standby or off"));
+                states.append(monitor->powerMode(modes.value(part.trimmed())));
+            }
+            if (states.size() == 1) {
+                monitor->setPower(states.first());
+                continue;
+            }
+            afterRead(monitor, Vcp::Power, [states](Monitor *current, bool answered) {
+                current->setPower(stepPower(states, current->raw(Vcp::Power) & 0xff, answered));
+            });
         } else if (command == "hold") {
             if (argument != "on" && argument != "off") return fail(tr("hold takes on or off"));
             monitor->setHold(argument == "on");
