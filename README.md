@@ -91,8 +91,8 @@ The `experimental` release at the top is built from the latest commit, so it's t
 ## Prerequisites
 
 - Zig 0.17 or higher
-- Qt 6.8 or newer with Quick, Quick Controls, QML and D-Bus
-- LayerShellQt
+- Qt 6.10 or newer with Quick, Quick Controls, QML and D-Bus
+- LayerShellQt 6.6 or newer
 - ddcutil 2.2.1 or newer, for libddcutil
 - CMake, Ninja and a C++20 compiler
 
