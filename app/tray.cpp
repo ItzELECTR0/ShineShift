@@ -9,18 +9,28 @@
 #include <QDBusMessage>
 #include <QDBusMetaType>
 #include <QDBusPendingCall>
-#include <QIcon>
 #include <QImage>
 #include <QPainter>
+#include <QPainterPath>
 #include <QtEndian>
 
+#include <array>
 #include <cmath>
 
 namespace {
 const char *WatcherService = "org.kde.StatusNotifierWatcher";
-const char *SymbolicIcon = "display-brightness-symbolic";
 
 enum Item { Root = 0, Open = 1, Refresh = 2, TurnOff = 3, Separator = 4, OpenSettings = 5, Quit = 6 };
+
+QPainterPath sparkle(QPointF centre, double radius) {
+    const double pinch = radius * 0.24;
+    QPainterPath path(centre + QPointF(0, -radius));
+    path.quadTo(centre + QPointF(pinch, -pinch), centre + QPointF(radius, 0));
+    path.quadTo(centre + QPointF(pinch, pinch), centre + QPointF(0, radius));
+    path.quadTo(centre + QPointF(-pinch, pinch), centre + QPointF(-radius, 0));
+    path.quadTo(centre + QPointF(-pinch, -pinch), centre + QPointF(0, -radius));
+    return path;
+}
 }
 
 QDBusArgument &operator<<(QDBusArgument &argument, const IconPixmap &pixmap) {
@@ -105,12 +115,10 @@ const QDBusArgument &operator>>(const QDBusArgument &argument, MenuEvent &event)
 
 TrayItemAdaptor::TrayItemAdaptor(Tray *tray) : QDBusAbstractAdaptor(tray->findChild<QObject *>("item")), m_tray(tray) {}
 
-QString TrayItemAdaptor::iconName() const { return m_tray->iconName(); }
-
 IconPixmapList TrayItemAdaptor::iconPixmap() const { return m_tray->pixmaps(); }
 
 ToolTip TrayItemAdaptor::toolTip() const {
-    return {m_tray->iconName(), m_tray->pixmaps(), QStringLiteral("ShineShift"), m_tray->displays()->summary()};
+    return {QString(), m_tray->pixmaps(), QStringLiteral("ShineShift"), m_tray->displays()->summary()};
 }
 
 void TrayItemAdaptor::Activate(int, int) { m_tray->displays()->toggleFlyout(); }
@@ -218,9 +226,7 @@ void Tray::announce() {
     QDBusConnection::sessionBus().asyncCall(call);
 }
 
-QString Tray::iconName() const { return QIcon::hasThemeIcon(SymbolicIcon) ? QString::fromLatin1(SymbolicIcon) : QString(); }
-
-// A plain sun, for trays whose icon theme has no brightness icon to recolour.
+// The app icon's star and its afterimages, each clone a fainter shade of the theme's text colour.
 IconPixmapList Tray::pixmaps() const {
     IconPixmapList out;
     const QColor color(m_theme->colors().value("on_surface").toString());
@@ -229,14 +235,14 @@ IconPixmapList Tray::pixmaps() const {
         image.fill(Qt::transparent);
         QPainter painter(&image);
         painter.setRenderHint(QPainter::Antialiasing);
-        const double centre = size / 2.0;
-        painter.setPen(QPen(color, size / 11.0, Qt::SolidLine, Qt::RoundCap));
-        painter.setBrush(Qt::NoBrush);
-        painter.drawEllipse(QPointF(centre, centre), size * 0.2, size * 0.2);
-        for (int ray = 0; ray < 8; ++ray) {
-            const double angle = ray * M_PI / 4.0;
-            const QPointF direction(std::cos(angle), std::sin(angle));
-            painter.drawLine(QPointF(centre, centre) + direction * size * 0.33, QPointF(centre, centre) + direction * size * 0.43);
+        painter.scale(size / 100.0, size / 100.0);
+        QPainterPath ahead;
+        for (int step = 0; step < 4; ++step) {
+            const QPainterPath star = sparkle(QPointF(66.5 - 15 * step, 33.5 + 15 * step), 31 - 4 * step);
+            QColor shade = color;
+            shade.setAlphaF(std::array{1.0, 0.6, 0.38, 0.2}[step]);
+            painter.fillPath(star.subtracted(ahead), shade);
+            ahead = ahead.united(star);
         }
         painter.end();
         QByteArray data(size * size * 4, Qt::Uninitialized);

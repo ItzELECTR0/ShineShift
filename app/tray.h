@@ -63,7 +63,7 @@ class TrayItemAdaptor final : public QDBusAbstractAdaptor {
     Q_PROPERTY(QString Status READ status CONSTANT)
     Q_PROPERTY(uint WindowId READ windowId CONSTANT)
     Q_PROPERTY(QString IconThemePath READ empty CONSTANT)
-    Q_PROPERTY(QString IconName READ iconName)
+    Q_PROPERTY(QString IconName READ empty CONSTANT)
     Q_PROPERTY(IconPixmapList IconPixmap READ iconPixmap)
     Q_PROPERTY(QString OverlayIconName READ empty CONSTANT)
     Q_PROPERTY(IconPixmapList OverlayIconPixmap READ noPixmap CONSTANT)
@@ -85,7 +85,6 @@ public:
     IconPixmapList noPixmap() const { return {}; }
     bool itemIsMenu() const { return false; }
     QDBusObjectPath menu() const { return QDBusObjectPath(QStringLiteral("/MenuBar")); }
-    QString iconName() const;
     IconPixmapList iconPixmap() const;
     ToolTip toolTip() const;
 
@@ -147,7 +146,6 @@ public:
 
     Displays *displays() const { return m_displays; }
     IconPixmapList pixmaps() const;
-    QString iconName() const;
     void scroll(int delta);
     void activate(int id);
     QVariantMap properties(int id) const;

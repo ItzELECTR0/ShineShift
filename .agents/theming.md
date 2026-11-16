@@ -37,3 +37,5 @@ Scroll views take no mouse buttons (`acceptedButtons: Qt.NoButton`), so a mouse 
 ## Icons
 
 `ui/icons/Icons.js` holds SVG path data from Microsoft's Fluent UI System Icons (MIT, licence beside it), rendered by `FluentIcon` with `QtQuick.Shapes`. To add one, download `ic_fluent_<name>_24_regular.svg` and append its `d` attributes to `paths` under `<name>_regular`. Only icons that are used are kept.
+
+`data/net.electris.ShineShift.svg` is the app icon, named after the app ID so `Icon=` and the Wayland app_id both find it, and installed to `share/icons/hicolor/scalable/apps`. It sticks to plain shapes, gradients and transforms, with no clip paths, masks or `pathLength`, because launchers and docs draw it with librsvg, Qt Svg or smaller SVG libraries. The tray draws a monochrome copy of its star and afterimages in `Tray::pixmaps()`, so a change to one belongs in the other.

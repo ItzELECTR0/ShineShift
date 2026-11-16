@@ -87,3 +87,4 @@ target_link_libraries(shineshift PRIVATE
     shineshift_core Qt6::Quick Qt6::Qml Qt6::QuickControls2 Qt6::DBus LayerShellQt::Interface PkgConfig::DDCUTIL)
 install(TARGETS shineshift RUNTIME DESTINATION bin)
 install(FILES data/net.electris.ShineShift.desktop DESTINATION share/applications)
+install(FILES data/net.electris.ShineShift.svg DESTINATION share/icons/hicolor/scalable/apps)

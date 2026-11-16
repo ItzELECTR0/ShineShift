@@ -53,4 +53,5 @@ ZIG_GLOBAL_CACHE_DIR=$PWD/zig-cache zig build test --cache-dir $PWD/zig-test-cac
 %license LICENSE fluentui-system-icons-LICENSE
 %{_bindir}/shineshift
 %{_datadir}/applications/net.electris.ShineShift.desktop
+%{_datadir}/icons/hicolor/scalable/apps/net.electris.ShineShift.svg
 %{_docdir}/%{name}/

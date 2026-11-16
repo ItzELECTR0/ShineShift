@@ -6,7 +6,7 @@
 
 - The item registers `org.kde.StatusNotifierItem-<pid>-1` and announces itself to `org.kde.StatusNotifierWatcher`, again every time a watcher appears, because shells get restarted.
 - `Scroll` deltas below 15 are taken as whole steps, larger ones as wheel units of 120 per notch. Hosts differ.
-- `IconName` is `display-brightness-symbolic` when the icon theme has it; `IconPixmap` always carries a drawn sun in the theme's text colour.
+- `IconName` stays empty, because hosts prefer a themed icon over `IconPixmap` and the icon is ShineShift's own: the app icon's star and three afterimages, drawn in the theme's text colour with each clone fainter. `NewIcon` goes out when the theme changes.
 - `Activate` toggles the flyout. The click coordinates are ignored for now.
 - The `tray` setting (on by default) claims or releases the bus name at runtime. Hosts drop an item when its name goes away, so releasing it is how the icon hides. The objects stay registered.
 

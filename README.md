@@ -1,5 +1,9 @@
 # ShineShift
 
+<p align="center">
+  <img src="data/net.electris.ShineShift.svg" alt="ShineShift logo" width="160">
+</p>
+
 ShineShift is a monitor brightness tray app for Linux, modelled on Twinkle Tray.
 It's written in Zig with a Qt Quick interface and talks DDC/CI to your monitors, so it doesn't care much which desktop you run (Hyprland is the one I use and test on).
 
