@@ -1,0 +1,9 @@
+{
+    "base": "dark",
+    "radius": 10,
+    "colors": {
+        "surface": "#11131a",
+        "on_surface": "#e6e9f2",
+        "primary": "#8aa8ff"
+    }
+}

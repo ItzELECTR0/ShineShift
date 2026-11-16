@@ -1,0 +1,13 @@
+.{
+    .name = .ShineShift,
+    .version = "0.0.0",
+    .fingerprint = 0xb8ee871c6ce31c37, // Changing this has security and trust implications.
+    .minimum_zig_version = "0.18.0-dev.1166+744a92b3a",
+    .dependencies = .{},
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        "LICENSE",
+    },
+}

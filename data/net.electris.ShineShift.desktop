@@ -1,0 +1,20 @@
+[Desktop Entry]
+Type=Application
+Name=ShineShift
+GenericName=Monitor Brightness
+Comment=Brightness, contrast and SDR brightness for your monitors
+Exec=shineshift
+Icon=display-brightness
+Terminal=false
+Categories=Utility;Settings;HardwareSettings;
+Keywords=brightness;contrast;monitor;display;ddc;hdr;
+StartupNotify=false
+Actions=Settings;Off;
+
+[Desktop Action Settings]
+Name=Settings
+Exec=shineshift settings
+
+[Desktop Action Off]
+Name=Turn off displays
+Exec=shineshift off

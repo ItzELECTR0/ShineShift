@@ -1,0 +1,69 @@
+# Maintainer: ELECTRO
+pkgname=shineshift
+pkgver=0.0.1.r0.g0000000
+pkgrel=1
+pkgdesc="Monitor brightness, contrast and SDR brightness from the tray, over DDC/CI"
+arch=('x86_64')
+license=('GPL-3.0-or-later' 'MIT')
+depends=(
+    'ddcutil'
+    'layer-shell-qt'
+    'qt6-base'
+    'qt6-declarative'
+)
+makedepends=(
+    'cmake'
+    'git'
+    'ninja'
+    'zig'
+)
+optdepends=(
+    'xdg-desktop-portal: following the system light or dark setting'
+    'xorg-xset: turning screens off on X11'
+)
+
+_repodir() { cd "$startdir/.." && pwd; }
+
+prepare() {
+    local _repo="$(_repodir)"
+    rm -rf "$srcdir/$pkgname"
+    mkdir -p "$srcdir/$pkgname"
+
+    # Package the working tree as it is, uncommitted and untracked files included
+    msg2 "Copying the working tree..."
+    git -C "$_repo" ls-files -z --cached --others --exclude-standard -- . ':!packaging' |
+        while IFS= read -r -d '' _file; do
+            [[ -e "$_repo/$_file" ]] || continue
+            install -Dm644 "$_repo/$_file" "$srcdir/$pkgname/$_file"
+        done
+}
+
+pkgver() {
+    local _repo="$(_repodir)"
+    local _version="$(sed -n 's/^project(ShineShift VERSION \([0-9.]*\).*/\1/p' "$_repo/CMakeLists.txt")"
+    # A checkout without commits still packages
+    local _count="$(git -C "$_repo" rev-list --count HEAD 2>/dev/null || echo 0)"
+    local _commit="$(git -C "$_repo" rev-parse --short HEAD 2>/dev/null || echo 0000000)"
+    printf "%s.r%s.g%s" "$_version" "$_count" "$_commit"
+}
+
+build() {
+    cmake -S "$pkgname" -B build -G Ninja \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr
+    cmake --build build
+}
+
+check() {
+    cd "$pkgname"
+    ZIG_GLOBAL_CACHE_DIR="$srcdir/build/zig-cache" zig build test --cache-dir "$srcdir/build/zig-test-cache"
+}
+
+package() {
+    DESTDIR="$pkgdir" cmake --install build
+
+    cd "$pkgname"
+    install -Dm644 data/themes/Midnight.json "$pkgdir/usr/share/doc/$pkgname/themes/Midnight.json"
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    install -Dm644 ui/icons/LICENSE "$pkgdir/usr/share/licenses/$pkgname/fluentui-system-icons-LICENSE"
+}
