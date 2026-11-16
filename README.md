@@ -86,7 +86,7 @@ Custom themes are JSON files in `~/.config/ShineShift/themes/`. Anything you lea
 - Zig 0.17 or higher
 - Qt 6.8 or newer with Quick, Quick Controls, QML and D-Bus
 - LayerShellQt
-- ddcutil 2.1 or newer, for libddcutil
+- ddcutil 2.2.1 or newer, for libddcutil
 - CMake, Ninja and a C++20 compiler
 
 ## Build

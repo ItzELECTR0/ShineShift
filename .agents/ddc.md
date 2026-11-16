@@ -2,7 +2,7 @@
 
 ## libddcutil
 
-Linked directly (2.1 or newer, for `ddca_get_display_info2` and its DRM connector name). Zig 0.18-dev has no `@cImport`, so `src/ddc.zig` declares the handful of functions and `DDCA_Display_Info2` by hand. A test pins the struct's size and offsets on x86_64; re-measure with a C `offsetof` program if libddcutil changes it.
+Linked directly (2.2.1 or newer, for `ddca_get_display_info2` and its DRM connector name). Zig 0.18-dev has no `@cImport`, so `src/ddc.zig` declares the handful of functions and `DDCA_Display_Info2` by hand. A test pins the struct's size and offsets on x86_64; re-measure with a C `offsetof` program if libddcutil changes it.
 
 `ddca_init2` runs with `DDCA_INIT_OPTIONS_DISABLE_CONFIG_FILE`, so a user's `ddcutilrc` cannot change our behaviour, and verification is off (`ddca_enable_verify(false)`) because we read back ourselves where it matters.
 

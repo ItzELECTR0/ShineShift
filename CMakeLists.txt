@@ -8,7 +8,7 @@ find_program(ZIG_EXECUTABLE zig REQUIRED)
 find_package(Qt6 6.8 REQUIRED COMPONENTS Quick Qml QuickControls2 DBus)
 find_package(LayerShellQt REQUIRED)
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(DDCUTIL REQUIRED IMPORTED_TARGET ddcutil>=2.1)
+pkg_check_modules(DDCUTIL REQUIRED IMPORTED_TARGET ddcutil>=2.2.1)
 qt_policy(SET QTP0001 NEW)
 qt_policy(SET QTP0004 NEW)
 
