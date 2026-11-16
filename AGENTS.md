@@ -6,7 +6,7 @@ ShineShift is a monitor brightness tray app for Linux, modelled on Twinkle Tray.
 - Never send Hyprland an `hl.monitor` call for an output whose rule selector is unknown. It replaces the user's whole monitor rule. See `.agents/hyprland.md`.
 - The look is shared with SnipShot and GlyphPop, not Fluent or Windows styling. See `.agents/theming.md`.
 - Do not claim desktop support beyond what has been exercised. `ROADMAP.md` lists what is still unconfirmed.
-- Only Zig 0.18-dev has been built here. `@cImport` no longer exists there, so C libraries are declared by hand.
+- Zig 0.17.1 is the minimum and 0.18-dev builds too. 0.18 has no `@cImport`, so C libraries are declared by hand.
 - Build with CMake (see README). Core tests are `zig build test`.
 
 ## Topics
@@ -17,3 +17,4 @@ ShineShift is a monitor brightness tray app for Linux, modelled on Twinkle Tray.
 - `.agents/shell.md`: read before touching the tray item, the flyout, the overlay or window placement.
 - `.agents/theming.md`: read before changing colours, controls, icons or the theme file format.
 - `.agents/testing.md`: read before running the app, especially anything that writes to a real monitor.
+- `.agents/packaging.md`: read before changing anything in `packaging/` or `.github/workflows/`, or cutting a release.

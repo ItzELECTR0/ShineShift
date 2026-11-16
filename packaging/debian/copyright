@@ -1,0 +1,14 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: ShineShift
+Source: https://github.com/ItzELECTR0/ShineShift
+
+Files: *
+Copyright: ELECTRO
+License: GPL-3.0-or-later
+ On Debian systems, the full text of the GNU General Public License version 3
+ can be found in /usr/share/common-licenses/GPL-3.
+
+Files: ui/icons/*
+Copyright: 2020 Microsoft Corporation
+License: MIT
+ The full text is in /usr/share/doc/shineshift/fluentui-system-icons-LICENSE.

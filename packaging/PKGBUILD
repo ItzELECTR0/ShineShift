@@ -1,9 +1,9 @@
 # Maintainer: ELECTRO
 pkgname=shineshift
-pkgver=0.0.1.r0.g0000000
+pkgver=0.0.1.r0.g085e6ec
 pkgrel=1
 pkgdesc="Monitor brightness, contrast and SDR brightness from the tray, over DDC/CI"
-arch=('x86_64')
+arch=('x86_64' 'aarch64')
 license=('GPL-3.0-or-later' 'MIT')
 depends=(
     'ddcutil'
@@ -15,7 +15,7 @@ makedepends=(
     'cmake'
     'git'
     'ninja'
-    'zig'
+    'zig>=0.17'
 )
 optdepends=(
     'xdg-desktop-portal: following the system light or dark setting'
@@ -39,12 +39,7 @@ prepare() {
 }
 
 pkgver() {
-    local _repo="$(_repodir)"
-    local _version="$(sed -n 's/^project(ShineShift VERSION \([0-9.]*\).*/\1/p' "$_repo/CMakeLists.txt")"
-    # A checkout without commits still packages
-    local _count="$(git -C "$_repo" rev-list --count HEAD 2>/dev/null || echo 0)"
-    local _commit="$(git -C "$_repo" rev-parse --short HEAD 2>/dev/null || echo 0000000)"
-    printf "%s.r%s.g%s" "$_version" "$_count" "$_commit"
+    "$startdir/version.sh"
 }
 
 build() {

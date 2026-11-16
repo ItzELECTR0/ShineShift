@@ -1,0 +1,39 @@
+Source: shineshift
+Section: utils
+Priority: optional
+Maintainer: ELECTRO <electro@electris.net>
+# Zig 0.17 is not in the archive, so it is not listed and has to be on PATH.
+# libddcutil 2.2.1 or newer comes from trixie-backports.
+Build-Depends:
+ cmake,
+ debhelper-compat (= 13),
+ libddcutil-dev (>= 2.2.1),
+ liblayershellqtinterface-dev,
+ ninja-build,
+ pkgconf,
+ qt6-base-dev,
+ qt6-declarative-dev,
+Standards-Version: 4.7.2
+Homepage: https://github.com/ItzELECTR0/ShineShift
+Rules-Requires-Root: no
+
+Package: shineshift
+Architecture: amd64 arm64
+Depends:
+ ddcutil,
+ layer-shell-qt,
+ qml6-module-qtquick,
+ qml6-module-qtquick-controls,
+ qml6-module-qtquick-effects,
+ qml6-module-qtquick-layouts,
+ qml6-module-qtquick-shapes,
+ qt6-wayland,
+ ${misc:Depends},
+ ${shlibs:Depends},
+Recommends:
+ x11-xserver-utils,
+ xdg-desktop-portal,
+Description: Monitor brightness from the tray, over DDC/CI
+ ShineShift sets brightness, contrast and other DDC/CI values per monitor from
+ a tray flyout or the command line, and SDR brightness for HDR outputs on
+ Hyprland.
