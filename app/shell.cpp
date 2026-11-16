@@ -6,6 +6,8 @@
 #include <LayerShellQt/Window>
 #include <QCursor>
 #include <QGuiApplication>
+#include <QPainter>
+#include <QRasterWindow>
 #include <QScreen>
 #include <QTimer>
 
@@ -19,6 +21,40 @@ constexpr int OverlayMargin = 72;
 QQuickWindow *namedWindow(QObject *root, const char *property) {
     return qobject_cast<QQuickWindow *>(root->property(property).value<QObject *>());
 }
+
+// An invisible surface over another output that closes the flyout when clicked.
+class Catcher final : public QRasterWindow {
+public:
+    Catcher(QScreen *screen, Displays *displays) : m_displays(displays) {
+        QSurfaceFormat format = this->format();
+        format.setAlphaBufferSize(8);
+        setFormat(format);
+        setFlag(Qt::FramelessWindowHint);
+        auto *layer = LayerWindow::get(this);
+        layer->setScope("shineshift-catcher");
+        layer->setLayer(LayerWindow::LayerOverlay);
+        layer->setAnchors({LayerWindow::AnchorTop, LayerWindow::AnchorBottom, LayerWindow::AnchorLeft, LayerWindow::AnchorRight});
+        layer->setExclusiveZone(0);
+        layer->setKeyboardInteractivity(LayerWindow::KeyboardInteractivityNone);
+        layer->setActivateOnShow(false);
+        layer->setScreen(screen);
+        layer->setDesiredSize(QSize(0, 0));
+    }
+
+protected:
+    void paintEvent(QPaintEvent *) override {
+        QPainter painter(this);
+        painter.setCompositionMode(QPainter::CompositionMode_Source);
+        painter.fillRect(QRect(QPoint(), size()), Qt::transparent);
+    }
+    // Queued, because closing the flyout destroys this window.
+    void mousePressEvent(QMouseEvent *) override {
+        QMetaObject::invokeMethod(m_displays, [displays = m_displays] { displays->closeFlyout(); }, Qt::QueuedConnection);
+    }
+
+private:
+    Displays *m_displays;
+};
 
 void followSize(QQuickWindow *window) {
     auto *layer = LayerWindow::get(window);
@@ -59,6 +95,14 @@ Shell::Shell(Displays *displays, Settings *settings, QObject *root, QObject *par
     }
 
     connect(m_displays, &Displays::flyoutOpenChanged, this, [this] { m_displays->flyoutOpen() ? showFlyout() : hideFlyout(); });
+    if (m_displays->layered()) {
+        const auto replace = [this] {
+            if (m_displays->flyoutOpen()) placeCatchers();
+        };
+        connect(m_flyout, &QWindow::screenChanged, this, replace);
+        connect(qGuiApp, &QGuiApplication::screenAdded, this, replace);
+        connect(qGuiApp, &QGuiApplication::screenRemoved, this, replace);
+    }
     connect(m_displays, &Displays::overlayChanged, this, [this] {
         if (m_displays->overlayVisible()) showOverlay();
         else m_overlay->setVisible(false);
@@ -71,8 +115,21 @@ QRect Shell::area() const {
     return screen ? screen->availableGeometry() : QRect(0, 0, 1280, 720);
 }
 
+// The compositor picks the flyout's output, so its screen is only known once it maps; screenChanged corrects a guess.
+void Shell::placeCatchers() {
+    m_catchers.clear();
+    for (QScreen *screen : QGuiApplication::screens()) {
+        if (screen == m_flyout->screen()) continue;
+        auto catcher = std::make_unique<Catcher>(screen, m_displays);
+        catcher->setVisible(true);
+        m_catchers.push_back(std::move(catcher));
+    }
+}
+
 void Shell::showFlyout() {
     if (m_displays->layered()) {
+        // Catchers go first: compositors stack a later layer surface above an earlier one on the same output.
+        placeCatchers();
         LayerWindow::get(m_flyout)->setKeyboardInteractivity(LayerWindow::KeyboardInteractivityExclusive);
     } else {
         const QRect screen = area();
@@ -92,6 +149,7 @@ void Shell::hideFlyout() {
         m_flyout->setVisible(false);
         return;
     }
+    m_catchers.clear();
     // Unmapping a surface that still holds exclusive keyboard focus leaves sway's pointer stuck on it.
     LayerWindow::get(m_flyout)->setKeyboardInteractivity(LayerWindow::KeyboardInteractivityNone);
     m_flyout->update();

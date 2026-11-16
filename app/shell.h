@@ -4,6 +4,9 @@
 #include <QPointer>
 #include <QQuickWindow>
 
+#include <memory>
+#include <vector>
+
 class Displays;
 class Settings;
 
@@ -18,10 +21,12 @@ private:
     void showFlyout();
     void hideFlyout();
     void showOverlay();
+    void placeCatchers();
     QRect area() const;
 
     Displays *m_displays;
     Settings *m_settings;
     QPointer<QQuickWindow> m_flyout;
     QPointer<QQuickWindow> m_overlay;
+    std::vector<std::unique_ptr<QWindow>> m_catchers;
 };

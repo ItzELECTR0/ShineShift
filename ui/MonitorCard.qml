@@ -72,6 +72,8 @@ Item {
             IconButton {
                 visible: root.monitor.showPower
                 anchors.right: parent.right
+                // The flyout header is 4 px wider on the right; this centres the button under its buttons.
+                anchors.rightMargin: -2
                 anchors.verticalCenter: parent.verticalCenter
                 implicitWidth: 28
                 implicitHeight: 28

@@ -1,6 +1,7 @@
 #include "tray.h"
 
 #include "displays.h"
+#include "settings.h"
 #include "themesource.h"
 
 #include <QCoreApplication>
@@ -160,7 +161,8 @@ QList<int> TrayMenuAdaptor::AboutToShowGroup(const QList<int> &, QList<int> &idE
     return {};
 }
 
-Tray::Tray(Displays *displays, ThemeSource *theme, QObject *parent) : QObject(parent), m_displays(displays), m_theme(theme) {
+Tray::Tray(Displays *displays, Settings *settings, ThemeSource *theme, QObject *parent)
+    : QObject(parent), m_displays(displays), m_theme(theme) {
     qDBusRegisterMetaType<IconPixmap>();
     qDBusRegisterMetaType<IconPixmapList>();
     qDBusRegisterMetaType<ToolTip>();
@@ -180,7 +182,6 @@ Tray::Tray(Displays *displays, ThemeSource *theme, QObject *parent) : QObject(pa
     QDBusConnection bus = QDBusConnection::sessionBus();
     if (!bus.isConnected()) return;
     m_service = QStringLiteral("org.kde.StatusNotifierItem-%1-1").arg(QCoreApplication::applicationPid());
-    bus.registerService(m_service);
     bus.registerObject("/StatusNotifierItem", &m_itemObject, QDBusConnection::ExportAdaptors);
     bus.registerObject("/MenuBar", &m_menuObject, QDBusConnection::ExportAdaptors);
 
@@ -191,10 +192,27 @@ Tray::Tray(Displays *displays, ThemeSource *theme, QObject *parent) : QObject(pa
     connect(&m_watcher, &QDBusServiceWatcher::serviceRegistered, this, &Tray::announce);
     connect(displays, &Displays::summaryChanged, m_item, &TrayItemAdaptor::NewToolTip);
     connect(theme, &ThemeSource::changed, m_item, &TrayItemAdaptor::NewIcon);
+    connect(settings, &QQmlPropertyMap::valueChanged, this, [this](const QString &key, const QVariant &value) {
+        if (key == "tray") setShown(value.toBool());
+    });
+    setShown(settings->flag("tray"));
+}
+
+// Hosts drop an item as soon as its bus name goes away, so releasing the name hides the icon.
+void Tray::setShown(bool shown) {
+    if (shown == m_shown) return;
+    m_shown = shown;
+    QDBusConnection bus = QDBusConnection::sessionBus();
+    if (!shown) {
+        bus.unregisterService(m_service);
+        return;
+    }
+    bus.registerService(m_service);
     announce();
 }
 
 void Tray::announce() {
+    if (!m_shown) return;
     QDBusMessage call = QDBusMessage::createMethodCall(WatcherService, "/StatusNotifierWatcher", WatcherService, "RegisterStatusNotifierItem");
     call << m_service;
     QDBusConnection::sessionBus().asyncCall(call);

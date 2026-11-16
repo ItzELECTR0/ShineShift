@@ -30,6 +30,7 @@ end)
 ```
 
 Click the tray icon for the sliders, scroll on it to change brightness, right click it for the rest.
+Don't want a tray icon? Switch it off in settings and bind `shineshift` to a key or your bar instead.
 
 ```sh
 shineshift                    # open or close the flyout

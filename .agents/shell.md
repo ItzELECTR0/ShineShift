@@ -8,10 +8,13 @@
 - `Scroll` deltas below 15 are taken as whole steps, larger ones as wheel units of 120 per notch. Hosts differ.
 - `IconName` is `display-brightness-symbolic` when the icon theme has it; `IconPixmap` always carries a drawn sun in the theme's text colour.
 - `Activate` toggles the flyout. The click coordinates are ignored for now.
+- The `tray` setting (on by default) claims or releases the bus name at runtime. Hosts drop an item when its name goes away, so releasing it is how the icon hides. The objects stay registered.
 
 ## Flyout
 
 On Wayland the flyout is a layer-shell surface on the overlay layer, anchored to all four edges with exclusive zone 0, so it covers the usable area of the active output and a click beside the card closes it. The card sits in the corner from `flyoutCorner`. Keyboard interactivity is exclusive while open, for Escape.
+
+Clicks on other outputs never reach the flyout's surface, so while it is open each other output gets a catcher: a transparent overlay layer surface with no keyboard that closes the flyout on any press (queued, since closing destroys the catcher). The compositor picks the flyout's output, so its `QWindow::screen()` can be stale until the surface enters an output; `screenChanged` rebuilds the catchers, and they are mapped before the flyout so a wrong guess stacks below it.
 
 Closing drops keyboard interactivity to none and hides 50 ms later. Unmapping a surface that holds exclusive keyboard focus leaves sway's pointer stuck on it (learned in SnipShot).
 

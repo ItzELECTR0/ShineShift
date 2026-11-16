@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
     }
 
     Shell shell(&displays, &settings, engine.rootObjects().constFirst());
-    Tray tray(&displays, &themes);
+    Tray tray(&displays, &settings, &themes);
     InstanceService service(&displays);
     if (bus.isConnected()) bus.registerObject(ShineShiftObjectPath, &service, QDBusConnection::ExportScriptableSlots);
 

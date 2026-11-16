@@ -455,10 +455,21 @@ Window {
                     }
                 }
                 Setting {
+                    icon: "eye_regular"
+                    title: qsTr("Tray icon")
+                    description: qsTr("Without it, open the flyout with the shineshift command.")
+                    Toggle {
+                        Accessible.name: qsTr("Tray icon")
+                        checked: Config.tray
+                        onToggled: Config.tray = checked
+                    }
+                }
+                Setting {
                     icon: "arrow_sync_regular"
                     title: qsTr("Tray scroll step")
                     description: qsTr("How far one notch on the tray icon moves the brightness.")
                     Segmented {
+                        enabled: Config.tray
                         options: [
                             { value: 1, label: "1" },
                             { value: 2, label: "2" },

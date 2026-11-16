@@ -16,6 +16,8 @@ wardian -s NAME exec -- build/shineshift list
 wardian -s NAME exec -- build/shineshift          # open the flyout
 ```
 
+- Every `exec` of `build/shineshift` needs the same fake and scratch variables as the daemon, best through a small wrapper script. If the daemon has not claimed the bus name yet, the exec becomes the daemon itself and drives the real monitors with the real config.
+- For a second output, `wardian -s NAME compositor sway create_output`. Screenshots show only `HEADLESS-1`, and the pointer spans the whole layout until it is pinned with `compositor sway 'input type:pointer map_to_output HEADLESS-1'`. Pin it to `HEADLESS-2` to click there.
 - The flyout and the overlay are layer surfaces, so `wardian windows` does not list them. Look at a screenshot.
 - `shineshift drift 1 0x10 100` moves a fake monitor behind the app's back. `list` shows what the app believes, so to prove a value really went back to the monitor, switch Hold off, wait out the 10 second restore window and open the flyout, which reads it fresh.
 - There is no tray host in the session. Exercise the item with `busctl --user call <name> /StatusNotifierItem org.kde.StatusNotifierItem Scroll is 120 vertical`, `Activate ii 0 0`, and the menu with `/MenuBar com.canonical.dbusmenu Event isvu 5 clicked s "" 0`. A negative argument needs `--` before the arguments.

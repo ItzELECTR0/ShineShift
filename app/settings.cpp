@@ -21,6 +21,7 @@ const Default defaults[] = {
     {"powerSignal", QStringLiteral("standby")},
     {"persistSdr", false},
     {"desktopIcons", false},
+    {"tray", true},
 };
 }
 

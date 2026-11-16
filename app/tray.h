@@ -9,6 +9,7 @@
 #include <QVariantMap>
 
 class Displays;
+class Settings;
 class ThemeSource;
 
 struct IconPixmap {
@@ -142,7 +143,7 @@ class Tray final : public QObject {
     Q_OBJECT
 
 public:
-    Tray(Displays *displays, ThemeSource *theme, QObject *parent = nullptr);
+    Tray(Displays *displays, Settings *settings, ThemeSource *theme, QObject *parent = nullptr);
 
     Displays *displays() const { return m_displays; }
     IconPixmapList pixmaps() const;
@@ -153,6 +154,7 @@ public:
     QList<int> items() const { return {1, 2, 3, 4, 5, 6}; }
 
 private:
+    void setShown(bool shown);
     void announce();
 
     Displays *m_displays;
@@ -163,5 +165,6 @@ private:
     TrayMenuAdaptor *m_menu;
     QDBusServiceWatcher m_watcher;
     QString m_service;
+    bool m_shown = false;
     int m_scrolled = 0;
 };

@@ -88,6 +88,8 @@ Window {
             height: parent.height - y - 14
             contentHeight: content.implicitHeight
             clip: contentHeight > height
+            // A mouse drag belongs to the sliders; touch and the wheel still scroll.
+            acceptedButtons: Qt.NoButton
             boundsBehavior: Flickable.StopAtBounds
             ScrollBar.vertical: Scroller {}
 
