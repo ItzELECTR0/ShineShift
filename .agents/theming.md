@@ -2,7 +2,7 @@
 
 The look is the one SnipShot and GlyphPop use: a quiet monochrome surface with one accent, small radii, 1 px outlines and the system font. It must not imitate Windows or Fluent (the Fluent icon set is the one exception) and must not read any particular shell's or bar's config. Every colour, radius and font size in QML comes from `ui/Theme.qml`.
 
-`app/themesource.*` and the controls in `ui/` (`Surface`, `IconButton`, `Toggle`, `Segmented`, `Dropdown`, `Field`, `Chip`, `Tip`, `Scroller`, `Spinner`, `ColorPicker`, `FluentIcon`) are copies of SnipShot's. Keep them in step with it rather than letting them drift; `LevelSlider`, `MonitorCard`, `Flyout`, `LevelOverlay` and `SettingsWindow` are ShineShift's own.
+`app/themesource.*` and the controls in `ui/` (`Surface`, `IconButton`, `Toggle`, `Segmented`, `Dropdown`, `Field`, `Chip`, `Tip`, `Scroller`, `Spinner`, `ColorPicker`, `FluentIcon`, `WheelScroll`) are copies of SnipShot's. Keep them in step with it rather than letting them drift; `LevelSlider`, `MonitorCard`, `Flyout`, `LevelOverlay` and `SettingsWindow` are ShineShift's own.
 
 ## Settings
 
@@ -31,6 +31,8 @@ The Quick Controls style is `Basic`, set once in `main.cpp`. Anything from Quick
 `LevelSlider` binds the backend value to its handle only while the handle is not held, and reports drags and wheel notches through one `moved` signal.
 
 `LevelOverlay` is not called `Overlay` because Quick Controls has an attached type of that name.
+
+Scroll views take no mouse buttons (`acceptedButtons: Qt.NoButton`), so a mouse drag never scrolls them; touch and touchpads still do. `WheelScroll` moves `wheelScrollLines` times 24 px per wheel notch, because Flickable turns each wheel event into a speed-capped flick that crawls, worst with high-resolution wheels. It is a MouseArea under the content with `scrollGestureEnabled: false`, so controls get the wheel first and touchpad scrolls (synthesized events) fall through to Flickable's own kinetic scrolling. A WheelHandler cannot do this: on Wayland, wheel events carry Qt's touchpad device whenever the compositor offers pointer gestures, and the handler blocks before `onWheel` runs.
 
 ## Icons
 

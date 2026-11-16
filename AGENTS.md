@@ -15,6 +15,6 @@ ShineShift is a monitor brightness tray app for Linux, modelled on Twinkle Tray.
 - `.agents/ddc.md`: read before touching libddcutil, the worker queue, remembered brightness, Hold or the fake displays.
 - `.agents/hyprland.md`: read before touching SDR brightness, the Hyprland sockets, config scanning or the `shineshift.lua` opt-in.
 - `.agents/shell.md`: read before touching the tray item, the flyout, the overlay or window placement.
-- `.agents/theming.md`: read before changing colours, controls, icons or the theme file format.
+- `.agents/theming.md`: read before changing colours, controls, scrolling, icons or the theme file format.
 - `.agents/testing.md`: read before running the app, especially anything that writes to a real monitor.
 - `.agents/packaging.md`: read before changing anything in `packaging/` or `.github/workflows/`, or cutting a release.

@@ -43,6 +43,7 @@ set(QML_SOURCES
     ui/Chip.qml
     ui/Spinner.qml
     ui/Scroller.qml
+    ui/WheelScroll.qml
     ui/ColorPicker.qml
     ui/Surface.qml
     ui/LevelSlider.qml

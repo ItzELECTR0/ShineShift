@@ -9,6 +9,7 @@
 - Whether an HDR change inside a session shows up in `colorManagementPreset`, which is what the restore relies on.
 - The config opt-in against the real `hyprland.lua`, and that Hyprland reloads when `shineshift.lua` is rewritten.
 - Screens off through `hl.dsp.dpms`.
+- Touchpad scrolling in the flyout and settings still being kinetic.
 
 ## Twinkle Tray parity
 
@@ -35,5 +36,4 @@
 
 - SDR brightness is refused when the output's `hl.monitor` rule builds its selector from a variable, because the config is read as text.
 - A command aimed at several displays shows one number in the overlay, the first display's.
-- The settings window briefly appears tiled before it floats.
 - Switching the config opt-in off leaves the `require` line in place.

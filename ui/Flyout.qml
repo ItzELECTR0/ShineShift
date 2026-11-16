@@ -92,6 +92,7 @@ Window {
             acceptedButtons: Qt.NoButton
             boundsBehavior: Flickable.StopAtBounds
             ScrollBar.vertical: Scroller {}
+            WheelScroll { view: list }
 
             Column {
                 id: content

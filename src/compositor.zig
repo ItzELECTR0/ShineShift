@@ -351,7 +351,7 @@ pub fn floatWindow(allocator: std.mem.Allocator, title: []const u8, width: c_int
     if (!logic.safeForLua(title)) return false;
     if (env("HYPRLAND_INSTANCE_SIGNATURE") != null) {
         const command = std.fmt.allocPrint(allocator, "/eval local title = '{s}'; for _, w in ipairs(hl.get_windows({{ title = title }})) do " ++
-            "if w.title == title then hl.dispatch(hl.dsp.window.float({{ action = 'set', window = w }})); " ++
+            "if w.title == title then hl.dispatch(hl.dsp.window.float({{ action = 'enable', window = w }})); " ++
             "hl.dispatch(hl.dsp.window.resize({{ window = w, x = {d}, y = {d}, relative = false }})); " ++
             "hl.dispatch(hl.dsp.window.center({{ window = w }})); end end", .{ title, width, height }) catch return false;
         return request(allocator, command) != null;

@@ -10,18 +10,25 @@ Window {
     title: "ShineShift Settings"
     width: 680
     height: 780
-    minimumWidth: 540
-    minimumHeight: 420
+    // Equal minimum and maximum sizes make Hyprland and sway map the window floating at that size.
+    property bool mapping: true
+    minimumWidth: mapping ? 680 : 540
+    minimumHeight: mapping ? 780 : 420
+    maximumWidth: mapping ? 680 : 16777215
+    maximumHeight: mapping ? 780 : 16777215
     color: Theme.surface
+    onFrameSwapped: mapping = false
     onVisibleChanged: if (visible) {
         Appearance.rescan()
         floater.attempts = 0
         floater.interval = 80
         floater.restart()
+    } else {
+        mapping = true
     }
     onClosing: Displays.closeSettings()
 
-    // A tiling compositor can only float the window once it is mapped, and sway sometimes keeps the tiled size at first.
+    // Fallback for compositors that tile it anyway: float it by title once it is mapped.
     Timer {
         id: floater
         property int attempts: 0
@@ -329,8 +336,10 @@ Window {
         id: flick
         anchors.fill: parent
         contentHeight: content.implicitHeight + 48
+        acceptedButtons: Qt.NoButton
         boundsBehavior: Flickable.StopAtBounds
         ScrollBar.vertical: Scroller {}
+        WheelScroll { view: flick }
 
         ColumnLayout {
             id: content

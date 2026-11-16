@@ -28,4 +28,4 @@ A small layer surface with no keyboard and no input region, anchored top or bott
 
 ## Settings window
 
-A normal toplevel. Tiling compositors would tile it, so it is floated by title once it is mapped: 80 ms after it shows and again 300 ms later, because sway sometimes keeps the tiled size after the first call.
+A normal toplevel. Hyprland and sway float a toplevel whose minimum and maximum sizes match when it maps, so the window pins both to 680x780 until its first frame has been swapped, then lifts them. As a fallback it is also floated by title 80 ms after it shows and again 300 ms later. The Hyprland call must say `action = 'enable'`: anything but `enable`, `disable` or `toggle` parses as a toggle, which made the second call tile it again.
